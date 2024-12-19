@@ -32,7 +32,7 @@ class User(models.Model):
     bio = models.TextField(blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
     location = models.CharField(max_length=512, blank=True, null=True)
-    photo = models.ImageField(upload_to='user_photos/', blank=True, null=True)
+    photo = models.URLField(blank=True, null=True)
     goal = models.CharField(max_length=50, choices=GOAL_CHOICES)
     status = models.BooleanField(default=True)
     portfolio = models.URLField(blank=True, null=True)
