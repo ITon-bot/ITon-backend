@@ -6,9 +6,15 @@ from users.models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['tg_id', 'first_name', 'last_name', 'photo']
+        fields = ['username', 'id', 'first_name', 'last_name', 'photo_url']
 
     def validate_tg_id(self, value):
-        if User.objects.filter(tg_id=value).exists():
-            raise serializers.ValidationError("Пользователь с таким tg_id уже существует.")
+        if User.objects.filter(id=value).exists():
+            raise serializers.ValidationError("Пользователь с таким id уже существует.")
         return value
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
