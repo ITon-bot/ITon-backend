@@ -1,13 +1,18 @@
-from django.urls import path, include
 from rest_framework import routers
 
-from users.views import UserViewSet
+from users.views import UserViewSet, EducationViewSet, AdditionalEducationViewSet, ExperienceViewSet
 
 app_name = 'users'
 
-router = routers.DefaultRouter()
-router.register(r'', UserViewSet, basename='specification')
+specification_router = routers.DefaultRouter()
+specification_router.register(r'', UserViewSet, basename='specification')
 
-urlpatterns = [
-    path('', include(router.urls)),
-]
+education_router = routers.DefaultRouter()
+education_router.register(r'', EducationViewSet, basename='education')
+
+additional_education_router = routers.DefaultRouter()
+additional_education_router.register(r'', AdditionalEducationViewSet, basename='additional_education')
+
+experience_router = routers.DefaultRouter()
+experience_router.register(r'', ExperienceViewSet, basename='experience')
+
