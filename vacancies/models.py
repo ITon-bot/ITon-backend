@@ -1,32 +1,34 @@
 from django.db import models
 
-from common.models import Specialization, Skill
+from common.models import Specialization, Skill, Location
 from users.models import User
+from views.models import View
+from django.utils.translation import gettext_lazy as _
 
 
 class Vacancy(models.Model):
-    TYPE_CHOICES = [('full_time', 'Full Time'),
-                    ('part_time', 'Part Time'),
-                    ('freelance', 'Freelance')]
+    TYPE_CHOICES = [('full_time', _('Full Time')),
+                    ('part_time', _('Part Time')),
+                    ('freelance', _('Freelance'))]
 
-    JOB_FORMAT_CHOICES = [('remote', 'Remote'),
-                          ('onsite', 'Onsite')]
+    JOB_FORMAT_CHOICES = [('remote', _('Remote')),
+                          ('onsite', _('Onsite'))]
 
-    LANGUAGE_CHOICES = [('en', 'English'),
-                        ('ru', 'Russian')]
+    LANGUAGE_CHOICES = [('en', _('English')),
+                        ('ru', _('Russian'))]
 
     CURRENCY_CHOICES = [('USD', 'USD'),
                         ('RUB', 'RUB'),
                         ('TON', 'TON')]
 
-    PAYMENT_FORMAT_CHOICES = [('hourly', 'Hourly'),
-                              ('monthly', 'Monthly'),
-                              ('fixed', 'Fixed'),
-                              ('yearly', 'Yearly')]
+    PAYMENT_FORMAT_CHOICES = [('hourly', _('Hourly')),
+                              ('monthly', _('Monthly')),
+                              ('fixed', _('Fixed')),
+                              ('yearly', _('Yearly'))]
 
-    EXPERIENCE_CHOICES = [('junior', 'Junior'),
-                          ('mid', 'Mid'),
-                          ('senior', 'Senior')]
+    EXPERIENCE_CHOICES = [('junior', _('Junior')),
+                          ('mid', _('Mid')),
+                          ('senior', _('Senior'))]
 
     name = models.CharField(max_length=255)
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='vacancies')
@@ -41,7 +43,7 @@ class Vacancy(models.Model):
     payment_format = models.CharField(max_length=50, choices=PAYMENT_FORMAT_CHOICES)
     min_payment = models.IntegerField(blank=True, null=True)
     max_payment = models.IntegerField(blank=True, null=True)
-    location = models.CharField(max_length=512, blank=True, null=True)
+    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, related_name='vacancies')
     experience = models.CharField(max_length=100, choices=EXPERIENCE_CHOICES)
     degree = models.BooleanField(default=False)
     skills = models.ManyToManyField(Skill, blank=True)
@@ -51,12 +53,17 @@ class Vacancy(models.Model):
     def __str__(self):
         return self.name
 
+    def view_count(self):
+        from django.contrib.contenttypes.models import ContentType
+        content_type = ContentType.objects.get_for_model(Vacancy)
+        return View.objects.filter(content_type=content_type, object_id=self.id).count()
+
 
 class JobResponse(models.Model):
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected')
+        ('pending', _('Pending')),
+        ('approved', _('Approved')),
+        ('rejected', _('Rejected'))
     ]
 
     user = models.ForeignKey(

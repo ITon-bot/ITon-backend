@@ -1,22 +1,24 @@
 from django.db import models
 
-from common.models import Skill, Specialization
+from common.models import Skill, Specialization, Location
 from users.models import User
+from views.models import View
+from django.utils.translation import gettext_lazy as _
 
 
 class Event(models.Model):
     TYPE_CHOICES = [('conference', 'Conference'),
-                    ('meetup', 'Meetup')]
+                    ('meetup', _('Meetup'))]
 
-    LANGUAGE_CHOICES = [('en', 'English'),
-                        ('ru', 'Russian')]
+    LANGUAGE_CHOICES = [('en', _('English')),
+                        ('ru', _('Russian'))]
 
-    FORMAT_CHOICES = [('online', 'Online'),
-                      ('offline', 'Offline'),
-                      ('hybrid', 'hybrid')]
+    FORMAT_CHOICES = [('online', _('Online')),
+                      ('offline', _('Offline')),
+                      ('hybrid', _('Hybrid'))]
 
-    JOIN_TYPE_CHOICES = [('open', 'Open'),
-                         ('invite_only', 'Invite Only')]
+    JOIN_TYPE_CHOICES = [('open', _('Open')),
+                         ('invite_only', _('Invite Only'))]
 
     name = models.CharField(max_length=255)
     company_name = models.CharField(max_length=255, blank=True, null=True)
@@ -29,7 +31,7 @@ class Event(models.Model):
     photo = models.ImageField(upload_to='event_photos/', blank=True, null=True)
     format = models.CharField(max_length=100,
                               choices=FORMAT_CHOICES)
-    location = models.CharField(max_length=512, blank=True, null=True)
+    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, related_name='events')
     age_restriction = models.IntegerField(blank=True, null=True)
     link = models.URLField(blank=True, null=True)
     start_timestamp = models.DateTimeField()
@@ -42,6 +44,11 @@ class Event(models.Model):
 
     def __str__(self):
         return self.name
+
+    def view_count(self):
+        from django.contrib.contenttypes.models import ContentType
+        content_type = ContentType.objects.get_for_model(Event)
+        return View.objects.filter(content_type=content_type, object_id=self.id).count()
 
 
 class Speaker(models.Model):
