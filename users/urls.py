@@ -4,8 +4,8 @@ from users.views import UserViewSet, EducationViewSet, AdditionalEducationViewSe
 
 app_name = 'users'
 
-specification_router = routers.DefaultRouter()
-specification_router.register(r'', UserViewSet, basename='specification')
+user_router = routers.DefaultRouter()
+user_router.register(r'', UserViewSet, basename='user')
 
 education_router = routers.DefaultRouter()
 education_router.register(r'', EducationViewSet, basename='education')
@@ -15,4 +15,3 @@ additional_education_router.register(r'', AdditionalEducationViewSet, basename='
 
 experience_router = routers.DefaultRouter()
 experience_router.register(r'', ExperienceViewSet, basename='experience')
-
