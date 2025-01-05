@@ -4,8 +4,8 @@ from rest_framework import status, mixins
 from rest_framework.viewsets import GenericViewSet
 
 from .models import User, Education, AdditionalEducation, Experience
-from .serializers import UserSerializer, ProfileSerializer, EducationSerializer, AdditionalEducationSerializer, \
-    ExperienceSerializer
+from .serializers import UserCreateSerializer, EducationSerializer, AdditionalEducationSerializer, \
+    ExperienceSerializer, UserSerializer
 
 
 class UserViewSet(mixins.CreateModelMixin,
@@ -17,9 +17,19 @@ class UserViewSet(mixins.CreateModelMixin,
     serializer_class = UserSerializer
     queryset = User.objects.all()
 
+    def create(self, request, *args, **kwargs):
+        data = request.data
+
+        serializer = UserCreateSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=False, methods=['GET'], url_path='profile')
     def profile(self, request):
-        serializer = ProfileSerializer(request.telegram_user)
+        serializer = UserSerializer(request.user)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
@@ -33,7 +43,7 @@ class EducationViewSet(mixins.CreateModelMixin,
     queryset = Education.objects.all()
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.telegram_user)
+        serializer.save(user=self.request.user)
 
 
 class AdditionalEducationViewSet(mixins.CreateModelMixin,
@@ -46,7 +56,7 @@ class AdditionalEducationViewSet(mixins.CreateModelMixin,
     queryset = AdditionalEducation.objects.all()
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.telegram_user)
+        serializer.save(user=self.request.user)
 
 
 class ExperienceViewSet(mixins.CreateModelMixin,
@@ -59,4 +69,4 @@ class ExperienceViewSet(mixins.CreateModelMixin,
     queryset = Experience.objects.all()
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.telegram_user)
+        serializer.save(user=self.request.user)
