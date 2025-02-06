@@ -1,9 +1,15 @@
+import json
+
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.utils.timezone import now
 
 from common.models import Specialization, Skill, Location
+from vacancies.tasks import redis_client
 from users.models import User
-from views.models import View
 from django.utils.translation import gettext_lazy as _
+
+from views.models import View
 
 
 class Vacancy(models.Model):
@@ -26,8 +32,9 @@ class Vacancy(models.Model):
                               ('fixed', _('Fixed')),
                               ('yearly', _('Yearly'))]
 
-    EXPERIENCE_CHOICES = [('junior', _('Junior')),
-                          ('mid', _('Mid')),
+    EXPERIENCE_CHOICES = [('intern', _('Intern')),
+                          ('junior', _('Junior')),
+                          ('middle', _('Middle')),
                           ('senior', _('Senior'))]
 
     name = models.CharField(max_length=255)
@@ -49,14 +56,24 @@ class Vacancy(models.Model):
     skills = models.ManyToManyField(Skill, blank=True)
     is_approved = models.BooleanField(default=False)
     response_count = models.IntegerField(default=0)
+    views_count = models.IntegerField(default=0)
 
     def __str__(self):
         return self.name
 
-    def view_count(self):
-        from django.contrib.contenttypes.models import ContentType
+    def register_view(self, user):
+        """Записываем просмотр в Redis"""
+        view_data = json.dumps({
+            "user_id": user.id,
+            "vacancy_id": self.id,
+            "timestamp": now().isoformat()
+        })
+        redis_client.rpush("pending_vacancy_views", view_data)
+
+    def get_views_count(self):
+        """Получаем количество просмотров вакансии"""
         content_type = ContentType.objects.get_for_model(Vacancy)
-        return View.objects.filter(content_type=content_type, object_id=self.id).count()
+        return View.objects.filter(object_id=self.id, content_type=content_type).count()
 
 
 class JobResponse(models.Model):
