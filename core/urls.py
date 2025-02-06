@@ -17,12 +17,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from common.urls import specialization_router, skill_router
 from users.urls import user_router, education_router, additional_education_router, experience_router
+from vacancies.urls import vacancy_router
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/users/', include(user_router.urls)),
     path('api/educations/', include(education_router.urls)),
     path('api/additional-educations/', include(additional_education_router.urls)),
-    path('api/experiences/', include(experience_router.urls))
+    path('api/experiences/', include(experience_router.urls)),
+    path('api/vacancies/', include(vacancy_router.urls)),
+    path('api/specializations/', include(specialization_router.urls)),
+    path('api/skills/', include(skill_router.urls)),
 ]
