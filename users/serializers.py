@@ -1,27 +1,23 @@
 from rest_framework import serializers
 
-from common.models import Location, Specialization, Skill
-from common.serializers import LocationSerializer
+from common.models import Location
+from common.serializers import LocationSerializer, SpecializationSerializer, SkillSerializer
 from users.models import User, Education, AdditionalEducation, Experience
+from vacancies.models import VacancyResponse
 
 
 class UserSerializer(serializers.ModelSerializer):
     location = LocationSerializer(required=False, allow_null=True)
 
-    specializations = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=Specialization.objects.all(),
-        required=False
-    )
-    skills = serializers.PrimaryKeyRelatedField(
-        many=True,
-        queryset=Skill.objects.all(),
-        required=False
-    )
+    specializations = SpecializationSerializer(many=True)
+    skills = SkillSerializer(many=True)
 
     class Meta:
         model = User
-        fields = '__all__'
+        fields = ['first_name', 'last_name', 'username', 'role', 'specializations',
+                  'skills', 'bio', 'date_of_birth', 'location', 'language',
+                  'photo_url', 'goal', 'status', 'portfolio', 'job_type',
+                  'is_blocked', 'visibility', 'total_experience']
 
     def create(self, validated_data):
         location_data = validated_data.pop('location', None)
@@ -50,17 +46,6 @@ class UserSerializer(serializers.ModelSerializer):
         user = super().update(instance, validated_data)
 
         return user
-
-
-class UserCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['username', 'id', 'first_name', 'last_name', 'photo_url']
-
-    def validate_tg_id(self, value):
-        if User.objects.filter(id=value).exists():
-            raise serializers.ValidationError("Пользователь с таким id уже существует.")
-        return value
 
 
 class EducationSerializer(serializers.ModelSerializer):
@@ -164,3 +149,51 @@ class ExperienceSerializer(serializers.ModelSerializer):
         if data.get('end_date') and data['start_date'] > data['end_date']:
             raise serializers.ValidationError("Дата окончания не может быть раньше даты начала.")
         return data
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    location = LocationSerializer(required=False, allow_null=True)
+    specializations = SpecializationSerializer(many=True, read_only=True)
+    skills = SkillSerializer(many=True, read_only=True)
+    educations = EducationSerializer(many=True, read_only=True)
+    additional_education = AdditionalEducationSerializer(many=True, read_only=True)
+    experiences = ExperienceSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'first_name', 'last_name', 'username', 'role', 'specializations',
+            'skills', 'bio', 'date_of_birth', 'location', 'language', 'photo_url', 'goal',
+            'status', 'portfolio', 'job_type', 'is_blocked', 'visibility', 'total_experience',
+            'educations', 'additional_education', 'experiences'
+        ]
+
+
+class ProfileMainSerializer(serializers.ModelSerializer):
+    specializations = SpecializationSerializer(many=True, read_only=True)
+    location = LocationSerializer(read_only=True)
+    vacancy_response_count = serializers.SerializerMethodField()
+    new_vacancy_responses_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            'first_name',
+            'last_name',
+            'specializations',
+            'location',
+            'language',
+            'goal',
+            'vacancy_response_count',
+            'new_vacancy_responses_count',
+        ]
+
+    def get_vacancy_response_count(self, obj):
+        return obj.vacancy_responses.count()
+
+    def get_new_vacancy_responses_count(self, obj):
+        return VacancyResponse.objects.filter(
+            vacancy__creator_id=obj.pk,
+            status='pending',
+            is_viewed=False
+        ).count()
