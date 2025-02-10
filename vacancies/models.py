@@ -76,7 +76,7 @@ class Vacancy(models.Model):
         return View.objects.filter(object_id=self.id, content_type=content_type).count()
 
 
-class JobResponse(models.Model):
+class VacancyResponse(models.Model):
     STATUS_CHOICES = [
         ('pending', _('Pending')),
         ('approved', _('Approved')),
@@ -86,7 +86,7 @@ class JobResponse(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='job_responses'
+        related_name='vacancy_responses'
     )
     vacancy = models.ForeignKey(
         Vacancy,
@@ -99,7 +99,13 @@ class JobResponse(models.Model):
         choices=STATUS_CHOICES,
         default='pending'
     )
+    is_viewed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.user.username} -> {self.vacancy.name}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'vacancy'], name='unique_vacancy_response')
+        ]
