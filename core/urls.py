@@ -19,7 +19,7 @@ from django.urls import path, include
 
 from common.urls import specialization_router, skill_router
 from users.urls import user_router, education_router, additional_education_router, experience_router
-from vacancies.urls import vacancy_router
+from vacancies.urls import vacancy_router, vacancy_response_router
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,6 +28,7 @@ urlpatterns = [
     path('api/additional-educations/', include(additional_education_router.urls)),
     path('api/experiences/', include(experience_router.urls)),
     path('api/vacancies/', include(vacancy_router.urls)),
+    path('api/vacancy-responses/', include(vacancy_response_router.urls)),
     path('api/specializations/', include(specialization_router.urls)),
     path('api/skills/', include(skill_router.urls)),
 ]
