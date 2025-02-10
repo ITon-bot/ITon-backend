@@ -1,12 +1,19 @@
+from datetime import date
+
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 from common.models import Specialization, Skill, Location
 from django.utils.translation import gettext_lazy as _
 
+year = 12
 
-# last_login = models.DateTimeField(_("last login"), blank=True, null=True)
 
-class User(models.Model):
+class User(AbstractUser):
+    """
+    Кастомная модель пользователя, унаследованная от AbstractUser.
+    """
+
     VISIBILITY_CHOICES = [
         ('public', _('Public')),
         ('hidden', _('Hidden')),
@@ -25,45 +32,79 @@ class User(models.Model):
         ('project_building', _('Building Projects')),
         ('job_search', _('Job Search')),
     ]
+    LANGUAGE_CHOICES = [
+        ('en', _('English')),
+        ('ru', _('Russian'))
+    ]
 
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100, blank=True, null=True)
     username = models.CharField(max_length=100, unique=True)
     role = models.CharField(max_length=100, blank=True, null=True)
-    specializations = models.ManyToManyField(Specialization, related_name='users')
-    skills = models.ManyToManyField(Skill, related_name='users')
+    specializations = models.ManyToManyField(Specialization, related_name='users', null=True)
+    skills = models.ManyToManyField(Skill, related_name='users', null=True)
     bio = models.TextField(blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
-    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, related_name='users')
+    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, related_name='users', blank=True)
+    language = models.CharField(max_length=32, choices=LANGUAGE_CHOICES, null=True)
     photo_url = models.URLField(blank=True, null=True)
-    goal = models.CharField(max_length=50, choices=GOAL_CHOICES)
+    goal = models.CharField(max_length=50, choices=GOAL_CHOICES, null=True, blank=True)
     status = models.BooleanField(default=True)
     portfolio = models.URLField(blank=True, null=True)
-    job_type = models.CharField(max_length=50, choices=JOB_TYPE_CHOICES)
+    job_type = models.CharField(max_length=50, choices=JOB_TYPE_CHOICES, null=True)
     is_blocked = models.BooleanField(default=False)
-    visiability = models.CharField(max_length=50, choices=VISIBILITY_CHOICES, default='public')
-
-    USERNAME_FIELD = 'username'
+    visibility = models.CharField(max_length=50, choices=VISIBILITY_CHOICES, default='public')
 
     SAFE_FIELDS = ['first_name', 'last_name', 'username', 'photo_url', 'bio']
 
     def __str__(self):
-        return self.first_name
+        return self.first_name or self.username
 
     @classmethod
     def login(cls, user_dict):
         tg_id = user_dict.get('id')
         if not tg_id:
-            raise ValueError("User ID is required for login.")
+            raise ValueError("User ID (Telegram ID) is required for login.")
 
-        defaults_dict = {key: user_dict[key] for key in cls.SAFE_FIELDS if key in user_dict}
+        defaults_dict = {
+            key: user_dict[key]
+            for key in cls.SAFE_FIELDS
+            if key in user_dict
+        }
 
         user, was_created = cls.objects.update_or_create(
-            id=tg_id,
+            pk=tg_id,
             defaults=defaults_dict
         )
-
         return user, was_created
+
+    total_experience = models.IntegerField(default=0)
+
+    def calculate_total_experience(self):
+        """
+        Вычисляет общий опыт работы пользователя на основе его записей в Experience.
+        """
+        total_days = 0
+        for exp in self.experiences.all():
+            end_date = exp.end_date if exp.end_date else date.today()
+            delta = end_date - exp.start_date
+            total_days += delta.days
+
+        self.total_experience = round(total_days / 30, 1)
+        self.save()
+
+    def get_experience_level(self):
+        """
+        Возвращает уровень опыта пользователя (junior, mid, senior) на основе total_experience.
+        """
+        if self.total_experience < 1 * year:
+            return 'intern'
+        elif 1 * year  <= self.total_experience < 2 * year:
+            return 'junior'
+        elif 2 * year<= self.total_experience < 5 * year:
+            return 'middle'
+        else:
+            return 'senior'
 
 
 class Education(models.Model):
