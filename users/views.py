@@ -1,11 +1,12 @@
+from django.db.models import Prefetch
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status, mixins
 from rest_framework.viewsets import GenericViewSet
 
 from .models import User, Education, AdditionalEducation, Experience
-from .serializers import UserCreateSerializer, EducationSerializer, AdditionalEducationSerializer, \
-    ExperienceSerializer, UserSerializer
+from .serializers import EducationSerializer, AdditionalEducationSerializer, \
+    ExperienceSerializer, UserSerializer, ProfileSerializer, ProfileMainSerializer
 
 
 class UserViewSet(mixins.CreateModelMixin,
@@ -17,19 +18,35 @@ class UserViewSet(mixins.CreateModelMixin,
     serializer_class = UserSerializer
     queryset = User.objects.all()
 
-    def create(self, request, *args, **kwargs):
-        data = request.data
-
-        serializer = UserCreateSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+    @action(detail=False, methods=['GET'], url_path='onboarding')
+    def onboarding(self, request):
+        if not request.user.goal:
+            requires = True
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            requires = False
+        return Response({"req_onboarding": requires}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'], url_path='profile')
     def profile(self, request):
-        serializer = UserSerializer(request.user)
+        user = User.objects.select_related('location') \
+            .prefetch_related(
+            'specializations',
+            'skills',
+            Prefetch('educations', queryset=Education.objects.select_related('location')),
+            'additional_education',
+            'experiences'
+        ).get(pk=request.user.pk)
+
+        serializer = ProfileSerializer(user)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['GET'], url_path='main')
+    def main_page(self, request):
+        user = User.objects.select_related('location') \
+            .prefetch_related('specializations') \
+            .get(pk=request.user.pk)
+
+        serializer = ProfileMainSerializer(user)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
