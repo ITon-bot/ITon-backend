@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 from os import environ
 from pathlib import Path
+
+from corsheaders.defaults import default_headers
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -27,8 +29,6 @@ SECRET_KEY = environ.get("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = environ.get('ALLOWED_HOSTS').split(' ')
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -41,8 +41,10 @@ INSTALLED_APPS = [
 
     # Apps
 
-    'users.apps.UsersConfig',
-    'common.apps.CommonConfig',
+    'users',
+    'vacancies',
+    'views',
+    'common',
 
     # Libs
 
@@ -86,8 +88,12 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': environ.get("DB_NAME"),
+        'USER': environ.get("DB_USER"),
+        'PASSWORD': environ.get("DB_PASSWORD"),
+        'HOST': environ.get("DB_HOST"),
+        'PORT': environ.get("DB_PORT")
     }
 }
 
@@ -108,6 +114,24 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -130,6 +154,39 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+LANGUAGES = [
+    ('en', 'English'),
+    ('ru', 'Russian')
+]
+
+LANGUAGE_CODE = 'en-us'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'users.auth.TelegramTokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated'
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+}
+
+AUTH_USER_MODEL = 'users.User'
+
+CELERY_BROKER_URL = environ.get('CELERY_BROKER_URL')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
 CORS_ALLOWED_ORIGINS = environ.get('ALLOWED_SCHEME_HOSTS').split(' ')
 
+CSRF_TRUSTED_ORIGINS = environ.get('ALLOWED_SCHEME_HOSTS').split(' ')
+
+CORS_ALLOW_HEADERS = (
+    *default_headers,
+    "Authorization",
+)
+
 CORS_ALLOW_CREDENTIALS = True
+
+ALLOWED_HOSTS = environ.get('ALLOWED_HOSTS').split(' ')
