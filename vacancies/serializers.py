@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from common.serializers import SkillSerializer, SpecializationSerializer, LocationSerializer
-from vacancies.models import Vacancy
+from vacancies.models import Vacancy, VacancyResponse
 
 
 class VacancySerializer(serializers.ModelSerializer):
@@ -9,6 +9,12 @@ class VacancySerializer(serializers.ModelSerializer):
     location = LocationSerializer(read_only=True)
     skills = SkillSerializer(many=True, read_only=True)
 
+    class Meta:
+        model = Vacancy
+        fields = '__all__'
+
+
+class VacancyCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vacancy
         fields = '__all__'
@@ -43,3 +49,15 @@ class VacancyFeedSerializer(serializers.ModelSerializer):
         if hasattr(obj, 'match_score'):
             return obj.match_score
         return None
+
+
+class VacancyResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VacancyResponse
+        fields = ['user', 'vacancy', 'message', 'status', 'is_viewed', 'created_at']
+
+
+class VacancyResponseStatusUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VacancyResponse
+        fields = ('status',)
