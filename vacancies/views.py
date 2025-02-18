@@ -1,14 +1,17 @@
 from django.db.models import F
 from rest_framework import mixins, status
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from common.services import perform_update_and_notify
 from vacancies.models import Vacancy, VacancyResponse
 from vacancies.serializers import (VacancyFeedSerializer, VacancyCreateSerializer,
-                                   VacancyResponseSerializer, VacancyResponseStatusUpdateSerializer)
+                                   VacancyResponseSerializer, VacancyResponseStatusUpdateSerializer,
+                                   VacancyApprovalSerializer)
 
-from vacancies.services import annotate_match_score
+from vacancies.services import annotate_match_score, send_status_notification, send_verification_notification
 
 
 class VacancyViewSet(mixins.CreateModelMixin,
@@ -94,18 +97,62 @@ class VacancyResponseViewSet(mixins.CreateModelMixin,
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        if self.request.user != instance.vacancy.creator:
+        if request.user != instance.vacancy.creator:
             return Response(
                 {'detail': 'Изменять отклик может только создатель вакансии.'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        return super().update(request, *args, **kwargs)
+        return perform_update_and_notify(
+            view=self,
+            request=request,
+            update_method=lambda: super(VacancyResponseViewSet, self).update(request, *args, **kwargs),
+            field_name='status',
+            notification_func=send_status_notification
+        )
 
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
-        if self.request.user != instance.vacancy.creator:
+        if request.user != instance.vacancy.creator:
             return Response(
                 {'detail': 'Изменять отклик может только создатель вакансии.'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        return super().partial_update(request, *args, **kwargs)
+        return perform_update_and_notify(
+            view=self,
+            request=request,
+            update_method=lambda: super(VacancyResponseViewSet, self).partial_update(request, *args, **kwargs),
+            field_name='status',
+            notification_func=send_status_notification
+        )
+
+
+class VacancyAdminViewSet(mixins.RetrieveModelMixin,
+                          mixins.UpdateModelMixin,
+                          GenericViewSet):
+    """
+    ViewSet для администрирования вакансий.
+    Позволяет администраторам обновлять поле approval_status.
+    При изменении этого поля отправляется уведомление создателю вакансии,
+    с возможностью прикрепления дополнительного сообщения.
+    """
+    queryset = Vacancy.objects.all()
+    serializer_class = VacancyApprovalSerializer
+    permission_classes = [IsAdminUser]
+
+    def update(self, request, *args, **kwargs):
+        return perform_update_and_notify(
+            view=self,
+            request=request,
+            update_method=lambda: super(VacancyAdminViewSet, self).update(request, *args, **kwargs),
+            field_name='approval_status',
+            notification_func=send_verification_notification
+        )
+
+    def partial_update(self, request, *args, **kwargs):
+        return perform_update_and_notify(
+            view=self,
+            request=request,
+            update_method=lambda: super(VacancyAdminViewSet, self).partial_update(request, *args, **kwargs),
+            field_name='approval_status',
+            notification_func=send_verification_notification
+        )
