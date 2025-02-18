@@ -17,9 +17,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from common.urls import specialization_router, skill_router
+from common.urls import specialization_router, skill_router, report_router, report_admin_router
 from users.urls import user_router, education_router, additional_education_router, experience_router
-from vacancies.urls import vacancy_router, vacancy_response_router
+from vacancies.urls import vacancy_router, vacancy_response_router, vacancy_admin_router
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,4 +31,9 @@ urlpatterns = [
     path('api/vacancy-responses/', include(vacancy_response_router.urls)),
     path('api/specializations/', include(specialization_router.urls)),
     path('api/skills/', include(skill_router.urls)),
+    path('api/reports/', include(report_router.urls)),
+
+    # admin
+    path('api/vacancies-admin/', include(vacancy_admin_router.urls)),
+    path('api/reports-admin/', include(report_admin_router.urls))
 ]
