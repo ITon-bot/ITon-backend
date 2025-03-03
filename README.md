@@ -1,4 +1,4 @@
-# ITon - Work, Communicate, Explore
+# ITon
 
 ## Описание проекта
 Это **бэкенд-приложение** для **Telegram Mini App**, разработанное на **Django**.
@@ -11,47 +11,11 @@
 
 - **Python 3.10+**
 - **Django 4.x**
-- **PostgreSQL** — база данных.
-- **Aiogram** — для интеграции с Telegram.
-- **Google API's** — для работы с локациями, книгами и вузами.
-- **Docker** — для контейнеризации проекта.
-- **DRF (Django REST Framework)** — создание REST API.
+- **PostgreSQL**
+- **Docker**
+- **Django REST Framework**
 
 ---
-
-##  Структура проекта
-
-```bash
-/
-│
-├── core/                   # Конфигурация проекта
-│   ├── settings.py           # Основные настройки Django
-│   ├── urls.py               # Главные маршруты
-│   └── wsgi.py               # WSGI для деплоя
-│
-├── users/                    # Приложение "Пользователи"
-│   ├── models.py             # Модели пользователей
-│   ├── serializers.py        # DRF-сериализаторы
-│   ├── views.py              # API-вьюхи
-│   ├── urls.py               # Эндпоинты для пользователей
-│   └── tests.py              # Тесты для приложения
-│
-├── events/                   # Приложение "Мероприятия"
-│   ├── models.py
-│   ├── serializers.py
-│   ├── views.py
-│   └── urls.py
-│
-├── vacancies/                # Приложение "Вакансии"
-│
-├── notifications/            # Управление уведомлениями
-│   ├── models.py
-│   ├── services.py           # Логика отправки уведомлений
-│   └── telegram_api.py       # Обёртка над Telegram Bot API
-│
-├── manage.py                 # Django CLI
-└── requirements.txt          # Зависимости проекта
-```
 
 #  Установка и запуск
 ## 1. Клонирование репозитория
