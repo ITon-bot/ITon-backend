@@ -1,10 +1,11 @@
 import json
 
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.timezone import now
 
-from common.models import Specialization, Skill, Location
+from common.models import Specialization, Skill, LanguageProficiency
 from vacancies.tasks import redis_client
 from users.models import User
 from django.utils.translation import gettext_lazy as _
@@ -13,15 +14,17 @@ from views.models import View
 
 
 class Vacancy(models.Model):
+    APPROVAL_CHOICES = [('pending', _('Pending')),
+                        ('accepted', _('Accepted')),
+                        ('rejected', _('Rejected')),
+                        ('blocked', _('Blocked'))]
+
     TYPE_CHOICES = [('full_time', _('Full Time')),
                     ('part_time', _('Part Time')),
                     ('freelance', _('Freelance'))]
 
     JOB_FORMAT_CHOICES = [('remote', _('Remote')),
                           ('onsite', _('Onsite'))]
-
-    LANGUAGE_CHOICES = [('en', _('English')),
-                        ('ru', _('Russian'))]
 
     CURRENCY_CHOICES = [('USD', 'USD'),
                         ('RUB', 'RUB'),
@@ -42,21 +45,21 @@ class Vacancy(models.Model):
     company_name = models.CharField(max_length=255, blank=True, null=True)
     company_link = models.URLField(blank=True, null=True)
     info = models.TextField(blank=True)
-    type = models.CharField(max_length=100, choices=TYPE_CHOICES)
-    job_format = models.CharField(max_length=100, choices=JOB_FORMAT_CHOICES)
-    language = models.CharField(max_length=100, choices=LANGUAGE_CHOICES)
+    languages = GenericRelation(LanguageProficiency, related_query_name='vacancy_languages')
     specialization = models.ForeignKey(Specialization, on_delete=models.CASCADE)
-    currency = models.CharField(max_length=10, choices=CURRENCY_CHOICES)
-    payment_format = models.CharField(max_length=50, choices=PAYMENT_FORMAT_CHOICES)
     min_payment = models.IntegerField(blank=True, null=True)
     max_payment = models.IntegerField(blank=True, null=True)
-    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, related_name='vacancies')
-    experience = models.CharField(max_length=100, choices=EXPERIENCE_CHOICES)
+    location = models.CharField(max_length=128, null=True, blank=True)
     degree = models.BooleanField(default=False)
     skills = models.ManyToManyField(Skill, blank=True)
-    is_approved = models.BooleanField(default=False)
     response_count = models.IntegerField(default=0)
     views_count = models.IntegerField(default=0)
+    approval_status = models.CharField(max_length=10, choices=APPROVAL_CHOICES, default='pending')
+    type = models.CharField(max_length=100, choices=TYPE_CHOICES)
+    job_format = models.CharField(max_length=100, choices=JOB_FORMAT_CHOICES)
+    currency = models.CharField(max_length=10, choices=CURRENCY_CHOICES)
+    payment_format = models.CharField(max_length=50, choices=PAYMENT_FORMAT_CHOICES)
+    experience = models.CharField(max_length=100, choices=EXPERIENCE_CHOICES)
 
     def __str__(self):
         return self.name
@@ -83,22 +86,10 @@ class VacancyResponse(models.Model):
         ('rejected', _('Rejected'))
     ]
 
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='vacancy_responses'
-    )
-    vacancy = models.ForeignKey(
-        Vacancy,
-        on_delete=models.CASCADE,
-        related_name='responses'
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='vacancy_responses')
+    vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE, related_name='responses')
     message = models.TextField(blank=True, null=True)
-    status = models.CharField(
-        max_length=50,
-        choices=STATUS_CHOICES,
-        default='pending'
-    )
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='pending')
     is_viewed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
