@@ -1,4 +1,3 @@
-from django.db.models import F
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser
@@ -11,7 +10,8 @@ from vacancies.serializers import (VacancyFeedSerializer, VacancyCreateSerialize
                                    VacancyResponseSerializer, VacancyResponseStatusUpdateSerializer,
                                    VacancyApprovalSerializer)
 
-from vacancies.services import annotate_match_score, send_status_notification, send_verification_notification
+from vacancies.services import send_status_notification, send_verification_notification, \
+    get_vacancy_feed_queryset, get_onboarding_vacancies
 
 
 class VacancyViewSet(mixins.CreateModelMixin,
@@ -23,7 +23,7 @@ class VacancyViewSet(mixins.CreateModelMixin,
     queryset = Vacancy.objects.all()
 
     def retrieve(self, request, pk=None, *args, **kwargs):
-        instance = Vacancy.objects.select_related('creator', 'location', 'specialization') \
+        instance = Vacancy.objects.select_related('creator', 'specialization') \
             .prefetch_related('skills') \
             .get(id=pk)
 
@@ -38,34 +38,15 @@ class VacancyViewSet(mixins.CreateModelMixin,
 
     @action(detail=False, methods=['get'], url_path='feed')
     def feed(self, request, *args, **kwargs):
-        qs = self.get_queryset()
-
-        qs = qs.select_related('specialization', 'location')
-        qs = qs.prefetch_related('skills', 'creator')
-
-        filters = {}
-        if vacancy_type := request.query_params.get('type'):
-            filters['type'] = vacancy_type
-        if experience := request.query_params.get('experience'):
-            filters['experience'] = experience
-
-        qs = qs.filter(**filters)
-
-        qs = annotate_match_score(qs, request.user)
-
-        ordering = request.query_params.get('ordering')
-        order_fields = [F(ordering).desc(nulls_last=True), '-match_score'] if ordering in ['min_payment',
-                                                                                           'max_payment'] else [
-            '-match_score']
-        qs = qs.order_by(*order_fields)
-
+        qs = get_vacancy_feed_queryset(self.get_queryset(), request.query_params, request.user)
         page = self.paginate_queryset(qs)
-        serializer = VacancyFeedSerializer(
-            page if page is not None else qs,
-            many=True,
-            context={"request": request}
-        )
+        serializer = VacancyFeedSerializer(page if page is not None else qs, many=True, context={"request": request})
         return self.get_paginated_response(serializer.data) if page else Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='onboarding')
+    def onboarding(self, request, *args, **kwargs):
+        data = get_onboarding_vacancies(self.get_queryset(), request, VacancyFeedSerializer)
+        return Response(data)
 
     @action(detail=True, methods=['GET'], url_path='responses')
     def responses(self, request, pk=None):
