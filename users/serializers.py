@@ -1,21 +1,26 @@
 from rest_framework import serializers
 
 from common.models import Location
-from common.serializers import LocationSerializer, SpecializationSerializer, SkillSerializer
+from common.serializers import SpecializationSerializer, SkillSerializer, \
+    LanguageProficiencySerializer
 from users.models import User, Education, AdditionalEducation, Experience
 from vacancies.models import VacancyResponse
 
 
-class UserSerializer(serializers.ModelSerializer):
-    location = LocationSerializer(required=False, allow_null=True)
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    password = serializers.CharField(style={'input_type': 'password'}, write_only=True)
 
+
+class UserSerializer(serializers.ModelSerializer):
+    languages = LanguageProficiencySerializer(source='user_languages', many=True, read_only=True)
     specializations = SpecializationSerializer(many=True)
     skills = SkillSerializer(many=True)
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'username', 'role', 'specializations',
-                  'skills', 'bio', 'date_of_birth', 'location', 'language',
+        fields = ['id', 'first_name', 'last_name', 'username', 'role', 'specializations',
+                  'skills', 'bio', 'date_of_birth', 'location', 'languages',
                   'photo_url', 'goal', 'status', 'portfolio', 'job_type',
                   'is_blocked', 'visibility', 'total_experience']
 
@@ -52,7 +57,6 @@ class EducationSerializer(serializers.ModelSerializer):
     """
     Универсальный сериализатор для CRUD операций с моделью Education.
     """
-    location = LocationSerializer(required=False, allow_null=True)
 
     class Meta:
         model = Education
@@ -152,28 +156,29 @@ class ExperienceSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    location = LocationSerializer(required=False, allow_null=True)
     specializations = SpecializationSerializer(many=True, read_only=True)
     skills = SkillSerializer(many=True, read_only=True)
     educations = EducationSerializer(many=True, read_only=True)
-    additional_education = AdditionalEducationSerializer(many=True, read_only=True)
+    additional_educations = AdditionalEducationSerializer(many=True, read_only=True)
     experiences = ExperienceSerializer(many=True, read_only=True)
+    languages = LanguageProficiencySerializer(many=True, read_only=True)
 
     class Meta:
         model = User
         fields = [
-            'first_name', 'last_name', 'username', 'role', 'specializations',
-            'skills', 'bio', 'date_of_birth', 'location', 'language', 'photo_url', 'goal',
-            'status', 'portfolio', 'job_type', 'is_blocked', 'visibility', 'total_experience',
-            'educations', 'additional_education', 'experiences'
+            'first_name', 'last_name', 'username', 'role',
+            'specializations', 'skills', 'bio', 'date_of_birth',
+            'location', 'languages', 'photo_url', 'goal', 'status',
+            'portfolio', 'job_type', 'is_blocked', 'visibility', 'total_experience',
+            'educations', 'additional_educations', 'experiences'
         ]
 
 
 class ProfileMainSerializer(serializers.ModelSerializer):
     specializations = SpecializationSerializer(many=True, read_only=True)
-    location = LocationSerializer(read_only=True)
     vacancy_response_count = serializers.SerializerMethodField()
     new_vacancy_responses_count = serializers.SerializerMethodField()
+    languages = LanguageProficiencySerializer(source='user_languages', many=True, read_only=True)
 
     class Meta:
         model = User
@@ -182,7 +187,7 @@ class ProfileMainSerializer(serializers.ModelSerializer):
             'last_name',
             'specializations',
             'location',
-            'language',
+            'languages',
             'goal',
             'vacancy_response_count',
             'new_vacancy_responses_count',

@@ -2,7 +2,8 @@ import re
 
 from rest_framework import serializers
 
-from common.serializers import SkillSerializer, SpecializationSerializer, LocationSerializer
+from common.serializers import SkillSerializer, SpecializationSerializer, LocationSerializer, LanguageSerializer, \
+    LanguageProficiencySerializer
 from vacancies.models import Vacancy, VacancyResponse
 
 
@@ -37,7 +38,10 @@ class VacancyCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Vacancy
-        fields = '__all__'
+        fields = ['name', 'creator', 'company_name', 'company_link', 'info',
+                  'languages', 'specialization', 'min_payment', 'max_payment',
+                  'location', 'degree', 'skills', 'type', 'job_format',
+                  'currency', 'payment_format', 'experience']
 
 
 class VacancySerializer(VacancyCreateSerializer):
@@ -54,6 +58,7 @@ class VacancyFeedSerializer(VacancyCreateSerializer):
     match_score = serializers.SerializerMethodField()
     skills = SkillSerializer(many=True, read_only=True)
     specialization = SpecializationSerializer()
+    languages = LanguageProficiencySerializer(many=True, read_only=True)
 
     class Meta:
         model = Vacancy
@@ -64,6 +69,7 @@ class VacancyFeedSerializer(VacancyCreateSerializer):
             'type',
             'job_format',
             'experience',
+            'languages',
             'min_payment',
             'max_payment',
             'specialization',
