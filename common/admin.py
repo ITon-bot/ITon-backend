@@ -1,6 +1,12 @@
 from django.contrib import admin
+from django.contrib.contenttypes.admin import GenericTabularInline
 
 from common.models import Language, LanguageProficiency, Report
+
+
+class LanguageProficiencyInline(GenericTabularInline):
+    model = LanguageProficiency
+    extra = 1
 
 
 @admin.register(Language)
