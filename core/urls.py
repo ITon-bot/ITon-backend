@@ -17,7 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from common.urls import specialization_router, skill_router, report_router, report_admin_router
+from common.urls import specialization_router, skill_router, report_router, report_admin_router, schema_view
+from common.views import SetLanguageView
 from users.urls import user_router, education_router, additional_education_router, experience_router
 from vacancies.urls import vacancy_router, vacancy_response_router, vacancy_admin_router
 
@@ -35,5 +36,13 @@ urlpatterns = [
 
     # admin
     path('api/vacancies-admin/', include(vacancy_admin_router.urls)),
-    path('api/reports-admin/', include(report_admin_router.urls))
+    path('api/reports-admin/', include(report_admin_router.urls)),
+
+    # loc
+    path('api/set-language/', SetLanguageView.as_view(), name='set-language'),
+
+    # swagger
+    path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
