@@ -1,12 +1,11 @@
 from datetime import date
 
 from django.contrib.auth.models import AbstractUser
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 
-from common.models import Specialization, Skill, Location
+from common.models import Specialization, Skill, Location, LanguageProficiency
 from django.utils.translation import gettext_lazy as _
-
-year = 12
 
 
 class User(AbstractUser):
@@ -32,21 +31,20 @@ class User(AbstractUser):
         ('project_building', _('Building Projects')),
         ('job_search', _('Job Search')),
     ]
-    LANGUAGE_CHOICES = [
-        ('en', _('English')),
-        ('ru', _('Russian'))
-    ]
 
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100, blank=True, null=True)
     username = models.CharField(max_length=100, unique=True)
     role = models.CharField(max_length=100, blank=True, null=True)
-    specializations = models.ManyToManyField(Specialization, related_name='users', null=True)
-    skills = models.ManyToManyField(Skill, related_name='users', null=True)
+    specializations = models.ManyToManyField(Specialization, related_name='users')
+    skills = models.ManyToManyField(Skill, related_name='users')
     bio = models.TextField(blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
-    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, related_name='users', blank=True)
-    language = models.CharField(max_length=32, choices=LANGUAGE_CHOICES, null=True)
+    location = models.ForeignKey(Location, on_delete=models.DO_NOTHING, null=True, related_name='users', blank=True)
+    languages = GenericRelation(
+        LanguageProficiency,
+        related_query_name='user_languages'
+    )
     photo_url = models.URLField(blank=True, null=True)
     goal = models.CharField(max_length=50, choices=GOAL_CHOICES, null=True, blank=True)
     status = models.BooleanField(default=True)
@@ -54,7 +52,7 @@ class User(AbstractUser):
     job_type = models.CharField(max_length=50, choices=JOB_TYPE_CHOICES, null=True)
     is_blocked = models.BooleanField(default=False)
     visibility = models.CharField(max_length=50, choices=VISIBILITY_CHOICES, default='public')
-
+    tg_id = models.BigIntegerField(unique=True, null=True, blank=True)
     SAFE_FIELDS = ['first_name', 'last_name', 'username', 'photo_url', 'bio']
 
     def __str__(self):
@@ -73,7 +71,7 @@ class User(AbstractUser):
         }
 
         user, was_created = cls.objects.update_or_create(
-            pk=tg_id,
+            tg_id=tg_id,
             defaults=defaults_dict
         )
         return user, was_created
@@ -97,14 +95,27 @@ class User(AbstractUser):
         """
         Возвращает уровень опыта пользователя (junior, mid, senior) на основе total_experience.
         """
-        if self.total_experience < 1 * year:
+        year = 12
+        if self.total_experience < year:
             return 'intern'
-        elif 1 * year  <= self.total_experience < 2 * year:
+        elif year <= self.total_experience < 2 * year:
             return 'junior'
-        elif 2 * year<= self.total_experience < 5 * year:
+        elif 2 * year <= self.total_experience < 5 * year:
             return 'middle'
         else:
             return 'senior'
+
+    def should_show_username(self, viewer):
+        """
+        Определяет, можно ли показывать username этому пользователю.
+        """
+        from vacancies.models import VacancyResponse
+        if viewer.is_authenticated and VacancyResponse.objects.filter(
+                user=self, vacancy__responses__user=viewer, status='approved'
+        ).exists():
+            return True
+
+        return False
 
 
 class Education(models.Model):
@@ -121,7 +132,7 @@ class Education(models.Model):
     )
 
     name = models.CharField(max_length=128)
-    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, related_name="educations")
+    location = models.CharField(max_length=128, null=True)
     program = models.TextField(blank=True, null=True)
     degree = models.CharField(max_length=50, choices=DEGREE_CHOICES, blank=True, null=True)
     start_date = models.DateField()
