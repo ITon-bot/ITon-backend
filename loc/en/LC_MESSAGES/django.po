@@ -1,0 +1,214 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-03-02 17:10+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: .\common\models.py:36
+msgid "Unique code for the language (e.g., 'en', 'ru')"
+msgstr ""
+
+#: .\common\models.py:37
+msgid "Display name of the language"
+msgstr ""
+
+#: .\common\models.py:40
+msgid "Language"
+msgstr ""
+
+#: .\common\models.py:41
+msgid "Languages"
+msgstr ""
+
+#: .\common\models.py:50
+msgid "Fluent"
+msgstr ""
+
+#: .\common\models.py:51
+msgid "Basic"
+msgstr ""
+
+#: .\common\models.py:52
+msgid "Native"
+msgstr ""
+
+#: .\common\models.py:53
+msgid "Conversational"
+msgstr ""
+
+#: .\common\models.py:63
+msgid "Language Proficiency"
+msgstr ""
+
+#: .\common\models.py:64
+msgid "Language Proficiencies"
+msgstr ""
+
+#: .\common\views.py:102
+msgid "Language has been changed."
+msgstr ""
+
+#: .\events\models.py:11
+msgid "Meetup"
+msgstr ""
+
+#: .\events\models.py:13
+msgid "English"
+msgstr ""
+
+#: .\events\models.py:14
+msgid "Russian"
+msgstr ""
+
+#: .\events\models.py:16
+msgid "Online"
+msgstr ""
+
+#: .\events\models.py:17
+msgid "Offline"
+msgstr ""
+
+#: .\events\models.py:18
+msgid "Hybrid"
+msgstr ""
+
+#: .\events\models.py:20
+msgid "Open"
+msgstr ""
+
+#: .\events\models.py:21
+msgid "Invite Only"
+msgstr ""
+
+#: .\users\models.py:17
+msgid "Public"
+msgstr ""
+
+#: .\users\models.py:18
+msgid "Hidden"
+msgstr ""
+
+#: .\users\models.py:22 .\vacancies\models.py:22
+msgid "Full Time"
+msgstr ""
+
+#: .\users\models.py:23 .\vacancies\models.py:23
+msgid "Part Time"
+msgstr ""
+
+#: .\users\models.py:24 .\vacancies\models.py:24
+msgid "Freelance"
+msgstr ""
+
+#: .\users\models.py:28
+msgid "Career Growth"
+msgstr ""
+
+#: .\users\models.py:29
+msgid "Personal Development"
+msgstr ""
+
+#: .\users\models.py:30
+msgid "Networking"
+msgstr ""
+
+#: .\users\models.py:31
+msgid "Building Projects"
+msgstr ""
+
+#: .\users\models.py:32
+msgid "Job Search"
+msgstr ""
+
+#: .\users\models.py:123
+msgid "Bachelor"
+msgstr ""
+
+#: .\users\models.py:124
+msgid "Master"
+msgstr ""
+
+#: .\users\models.py:125 .\users\models.py:151
+msgid "Other"
+msgstr ""
+
+#: .\users\models.py:149
+msgid "Course"
+msgstr ""
+
+#: .\users\models.py:150
+msgid "Book"
+msgstr ""
+
+#: .\vacancies\models.py:17 .\vacancies\models.py:84
+msgid "Pending"
+msgstr ""
+
+#: .\vacancies\models.py:18
+msgid "Accepted"
+msgstr ""
+
+#: .\vacancies\models.py:19 .\vacancies\models.py:86
+msgid "Rejected"
+msgstr ""
+
+#: .\vacancies\models.py:20
+msgid "Blocked"
+msgstr ""
+
+#: .\vacancies\models.py:26
+msgid "Remote"
+msgstr ""
+
+#: .\vacancies\models.py:27
+msgid "Onsite"
+msgstr ""
+
+#: .\vacancies\models.py:33
+msgid "Hourly"
+msgstr ""
+
+#: .\vacancies\models.py:34
+msgid "Monthly"
+msgstr ""
+
+#: .\vacancies\models.py:35
+msgid "Fixed"
+msgstr ""
+
+#: .\vacancies\models.py:36
+msgid "Yearly"
+msgstr ""
+
+#: .\vacancies\models.py:38
+msgid "Intern"
+msgstr ""
+
+#: .\vacancies\models.py:39
+msgid "Junior"
+msgstr ""
+
+#: .\vacancies\models.py:40
+msgid "Middle"
+msgstr ""
+
+#: .\vacancies\models.py:41
+msgid "Senior"
+msgstr ""
+
+#: .\vacancies\models.py:85
+msgid "Approved"
+msgstr ""
