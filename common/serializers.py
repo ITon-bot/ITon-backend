@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from common.models import Location, Specialization, Skill, Language, LanguageProficiency, Report
+from core.settings import LANGUAGES
 
 
 class LocationSerializer(serializers.ModelSerializer):
@@ -115,3 +116,10 @@ class ReportAdminSerializer(serializers.ModelSerializer):
             serializer = UserSerializer(obj.content_object, context=self.context)
             return serializer.data
         return None
+
+
+class LanguageSerializer(serializers.Serializer):
+    language = serializers.ChoiceField(
+        choices=[lang[0] for lang in LANGUAGES],
+        help_text="Language codes for activation"
+    )
