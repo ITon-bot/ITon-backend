@@ -49,14 +49,16 @@ INSTALLED_APPS = [
     # Libs
 
     'rest_framework',
-    'corsheaders'
+    'corsheaders',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -136,8 +138,6 @@ LOGGING = {
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
@@ -154,12 +154,14 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+LANGUAGE_CODE = 'en-us'
+
 LANGUAGES = [
     ('en', 'English'),
     ('ru', 'Russian')
 ]
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_COOKIE_NAME = 'django_language'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -190,3 +192,9 @@ CORS_ALLOW_HEADERS = (
 CORS_ALLOW_CREDENTIALS = True
 
 ALLOWED_HOSTS = environ.get('ALLOWED_HOSTS').split(' ')
+
+DOMAIN = environ.get('DOMAIN')
+
+LOCALE_PATHS = [
+    BASE_DIR / 'loc',
+]
