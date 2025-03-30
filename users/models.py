@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 
-from common.models import Specialization, Skill, Location, LanguageProficiency
+from common.models import Specialization, Skill, LanguageProficiency
 from django.utils.translation import gettext_lazy as _
 
 
@@ -32,27 +32,33 @@ class User(AbstractUser):
         ('job_search', _('Job Search')),
     ]
 
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100, blank=True, null=True)
+    first_name = models.CharField(max_length=100, verbose_name='Имя')
+    last_name = models.CharField(max_length=100, blank=True, null=True, verbose_name='Фамилия')
     username = models.CharField(max_length=100, unique=True)
-    role = models.CharField(max_length=100, blank=True, null=True)
-    specializations = models.ManyToManyField(Specialization, related_name='users')
+    role = models.CharField(max_length=100, blank=True, null=True, verbose_name='Роль??')
+    specialization = models.ForeignKey(
+        Specialization,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='users'
+    )
     skills = models.ManyToManyField(Skill, related_name='users')
-    bio = models.TextField(blank=True, null=True)
-    date_of_birth = models.DateField(blank=True, null=True)
-    location = models.ForeignKey(Location, on_delete=models.DO_NOTHING, null=True, related_name='users', blank=True)
+    bio = models.TextField(blank=True, null=True, verbose_name='О себе')
+    date_of_birth = models.DateField(blank=True, null=True, verbose_name='Дата рождения')
+    location = models.CharField(max_length=128, null=True, blank=True, verbose_name='Локация')
     languages = GenericRelation(
         LanguageProficiency,
         related_query_name='user_languages'
     )
-    photo_url = models.URLField(blank=True, null=True)
-    goal = models.CharField(max_length=50, choices=GOAL_CHOICES, null=True, blank=True)
-    status = models.BooleanField(default=True)
-    portfolio = models.URLField(blank=True, null=True)
-    job_type = models.CharField(max_length=50, choices=JOB_TYPE_CHOICES, null=True)
+    photo_url = models.URLField(blank=True, null=True, verbose_name='Ссылка на фото')
+    goal = models.CharField(max_length=50, choices=GOAL_CHOICES, null=True, blank=True, verbose_name='Цель')
+    status = models.BooleanField(default=True, verbose_name='Онлайн/оффлайн')
+    portfolio = models.URLField(blank=True, null=True, verbose_name='Ссылка на портфолио')
+    job_type = models.CharField(max_length=50, choices=JOB_TYPE_CHOICES, null=True, verbose_name='Тип работы')
     is_blocked = models.BooleanField(default=False)
     visibility = models.CharField(max_length=50, choices=VISIBILITY_CHOICES, default='public')
-    tg_id = models.BigIntegerField(unique=True, null=True, blank=True)
+    tg_id = models.BigIntegerField(unique=True, null=True, blank=True, verbose_name='Telegram ID')
     SAFE_FIELDS = ['first_name', 'last_name', 'username', 'photo_url', 'bio']
 
     def __str__(self):
@@ -70,7 +76,7 @@ class User(AbstractUser):
             if key in user_dict
         }
 
-        user, was_created = cls.objects.update_or_create(
+        user, was_created = cls.objects.get_or_create(
             tg_id=tg_id,
             defaults=defaults_dict
         )
@@ -88,7 +94,7 @@ class User(AbstractUser):
             delta = end_date - exp.start_date
             total_days += delta.days
 
-        self.total_experience = round(total_days / 30, 1)
+        self.total_experience = round(total_days / 30)
         self.save()
 
     def get_experience_level(self):
@@ -110,9 +116,10 @@ class User(AbstractUser):
         Определяет, можно ли показывать username этому пользователю.
         """
         from vacancies.models import VacancyResponse
-        if viewer.is_authenticated and VacancyResponse.objects.filter(
-                user=self, vacancy__responses__user=viewer, status='approved'
-        ).exists():
+        if VacancyResponse.objects.filter(user=self, vacancy__creator=viewer, status='approved').exists():
+            return True
+
+        if VacancyResponse.objects.filter(user=viewer, vacancy__creator=self, status='approved').exists():
             return True
 
         return False
@@ -131,24 +138,44 @@ class Education(models.Model):
         related_name="educations"
     )
 
-    name = models.CharField(max_length=128)
-    location = models.CharField(max_length=128, null=True)
-    program = models.TextField(blank=True, null=True)
-    degree = models.CharField(max_length=50, choices=DEGREE_CHOICES, blank=True, null=True)
-    start_date = models.DateField()
-    end_date = models.DateField(blank=True, null=True)
+    name = models.CharField(max_length=128, verbose_name='Название учреждения')
+    location = models.CharField(max_length=128, blank=True, verbose_name='Место обучения')
+    program = models.CharField(max_length=64, verbose_name='Направление обучения')
+    degree = models.CharField(max_length=50, choices=DEGREE_CHOICES, verbose_name='Степень обучения')
+    start_date = models.DateField(verbose_name='Дата начала обучения')
+    end_date = models.DateField(blank=True, null=True, verbose_name='Дата окончания обучения')
 
-    unique_together = ('user', 'location', 'degree')
+    unique_together = ('user', 'name', 'location', 'degree', 'program')
 
     def __str__(self):
         return f"{self.name} ({self.degree})"
 
 
+class UserBook(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='books'
+    )
+    title = models.CharField(max_length=500, verbose_name=_("Название"))
+    authors = models.JSONField(default=list, verbose_name=_("Авторы"))
+    publish_year = models.PositiveSmallIntegerField(verbose_name=_("Год издания"))
+    cover_url = models.URLField(verbose_name=_("Обложка"))
+
+    class Meta:
+        unique_together = ['user', 'title']
+        verbose_name = _("Книга пользователя")
+        verbose_name_plural = _("Книги пользователей")
+
+    def __str__(self):
+        return f"{self.user.username} - {self.title}"
+
+
 class AdditionalEducation(models.Model):
     EDUCATION_TYPE_CHOICES = [
         ('course', _('Course')),
-        ('book', _('Book')),
-        ('other', _('Other')),
+        ('test', _('Test')),
+        ('event', _('Event'))
     ]
 
     user = models.ForeignKey(
@@ -169,7 +196,7 @@ class AdditionalEducation(models.Model):
     end_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.name} ({self.type}) - {self.user.first_name} {self.user.last_name}"
+        return f"{self.user} - {self.name}({self.type})"
 
 
 class Experience(models.Model):
@@ -184,6 +211,9 @@ class Experience(models.Model):
     info = models.TextField(blank=True, null=True)
     start_date = models.DateField()
     end_date = models.DateField(blank=True, null=True)
+
+    def __str__(self):
+        return f'{self.user} - {self.company_name}'
 
     def is_current_job(self):
         """Определяет, является ли это место работы текущим."""
