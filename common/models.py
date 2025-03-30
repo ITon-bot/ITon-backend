@@ -3,8 +3,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from core.settings import AUTH_USER_MODEL
-
 
 class Specialization(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -68,8 +66,9 @@ class LanguageProficiency(models.Model):
 
 
 class Report(models.Model):
+
     reporter = models.ForeignKey(
-        AUTH_USER_MODEL,
+        'users.User',
         on_delete=models.CASCADE,
         related_name='reports_sent',
         verbose_name="Пожаловался")
