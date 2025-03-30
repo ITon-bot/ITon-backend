@@ -1,14 +1,15 @@
 import json
 
-from celery import shared_task
 import redis
 from django.contrib.contenttypes.models import ContentType
+
+from core.celery import celery_app as app
 from views.models import View
 
 redis_client = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 
-@shared_task(name='vacancies.tasks.flush_views_to_db')
+@app.task
 def flush_views_to_db():
     """Сбрасываем накопленные просмотры из Redis в БД"""
     from vacancies.models import Vacancy
@@ -19,14 +20,15 @@ def flush_views_to_db():
     keys = redis_client.keys("vacancy:*:views")
 
     for key in keys:
-        vacancy_id = int(key.split(":")[1])
+        key_str = key.decode()
+        vacancy_id = int(key_str.split(":")[1])
         redis_views = int(redis_client.get(key) or 0)
 
         Vacancy.objects.filter(id=vacancy_id).update(views_count=redis_views)
 
     while redis_client.llen("pending_vacancy_views") > 0:
         view_json = redis_client.lpop("pending_vacancy_views")
-        view_data = json.loads(view_json)
+        view_data = json.loads(view_json.decode())
 
         views.append(View(
             user_id=view_data["user_id"],
@@ -37,4 +39,3 @@ def flush_views_to_db():
 
     if views:
         View.objects.bulk_create(views)
-
