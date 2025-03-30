@@ -46,7 +46,9 @@ class Vacancy(models.Model):
     company_link = models.URLField(blank=True, null=True)
     info = models.TextField(blank=True)
     languages = GenericRelation(LanguageProficiency, related_query_name='vacancy_languages')
-    specialization = models.ForeignKey(Specialization, on_delete=models.CASCADE)
+    specializations = models.ManyToManyField(Specialization, blank=True)
+    parent_vacancy = models.ForeignKey('self', on_delete=models.CASCADE, null=True,
+                                       blank=True, related_name='child_vacancies')
     min_payment = models.IntegerField(blank=True, null=True)
     max_payment = models.IntegerField(blank=True, null=True)
     location = models.CharField(max_length=128, null=True, blank=True)
