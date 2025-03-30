@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser
@@ -6,12 +7,12 @@ from rest_framework.viewsets import GenericViewSet
 
 from common.services import perform_update_and_notify
 from vacancies.models import Vacancy, VacancyResponse
-from vacancies.serializers import (VacancyFeedSerializer, VacancyCreateSerializer,
+from vacancies.serializers import (VacancyFeedSerializer, VacancyMainSerializer,
                                    VacancyResponseSerializer, VacancyResponseStatusUpdateSerializer,
-                                   VacancyApprovalSerializer)
+                                   VacancyApprovalSerializer, VacancyResponseShortSerializer)
 
 from vacancies.services import send_status_notification, send_verification_notification, \
-    get_vacancy_feed_queryset, get_onboarding_vacancies
+    get_vacancy_feed_queryset, get_onboarding_vacancies, annotate_response_match_score
 
 
 class VacancyViewSet(mixins.CreateModelMixin,
@@ -19,12 +20,12 @@ class VacancyViewSet(mixins.CreateModelMixin,
                      mixins.UpdateModelMixin,
                      mixins.DestroyModelMixin,
                      GenericViewSet):
-    serializer_class = VacancyCreateSerializer
+    serializer_class = VacancyMainSerializer
     queryset = Vacancy.objects.all()
 
     def retrieve(self, request, pk=None, *args, **kwargs):
-        instance = Vacancy.objects.select_related('creator', 'specialization') \
-            .prefetch_related('skills') \
+        instance = Vacancy.objects.select_related('creator') \
+            .prefetch_related('skills', 'specializations', 'languages') \
             .get(id=pk)
 
         instance.register_view(request.user)
@@ -52,14 +53,50 @@ class VacancyViewSet(mixins.CreateModelMixin,
     def responses(self, request, pk=None):
         vacancy = self.get_object()
 
-        responses_qs = vacancy.responses.all().order_by('is_viewed', '-created_at')
-        responses_list = list(responses_qs)
+        if vacancy.type == 'freelance' and vacancy.parent_vacancy is None:
+            all_vacancy_ids = list(vacancy.child_vacancies.values_list('id', flat=True)) + [vacancy.id]
+            child_vacancies = vacancy.child_vacancies.values('id',
+                                                             'specializations__name')
+            responses_qs = VacancyResponse.objects.filter(vacancy_id__in=all_vacancy_ids)
+        else:
+            child_vacancies = []
+            responses_qs = vacancy.responses.all()
 
-        serializer = VacancyResponseSerializer(responses_list, many=True)
+        child_vacancy_id = request.query_params.get('child_vacancy_id')
+        if child_vacancy_id:
+            responses_qs = responses_qs.filter(vacancy_id=child_vacancy_id)
 
-        vacancy.responses.filter(is_viewed=False).update(is_viewed=True)
+        filter_param = request.query_params.get('filter')
+        if filter_param == 'new':
+            responses_qs = responses_qs.filter(is_viewed=False)
+        elif filter_param == 'rejected':
+            responses_qs = responses_qs.filter(status='rejected')
+        elif filter_param == 'invited':
+            responses_qs = responses_qs.filter(status='approved')
+        elif filter_param == 'viewed':
+            responses_qs = responses_qs.filter(is_viewed=True)
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        responses_qs = annotate_response_match_score(responses_qs, vacancy)
+
+        serializer = VacancyResponseShortSerializer(responses_qs.distinct(), many=True)
+
+        vacancy_data = {
+            'id': vacancy.id,
+            'name': vacancy.name,
+            'company_name': vacancy.company_name,
+            'approval_status': vacancy.approval_status,
+            'response_count': vacancy.response_count,
+            'views_count': vacancy.views_count,
+            'child_vacancies': {cv['specializations__name']: cv['id'] for cv in child_vacancies}
+        }
+
+        return Response(
+            {
+                'vacancy': vacancy_data,
+                'responses': serializer.data
+            },
+            status=status.HTTP_200_OK
+        )
 
 
 class VacancyResponseViewSet(mixins.CreateModelMixin,
