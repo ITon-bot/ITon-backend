@@ -15,3 +15,6 @@ additional_education_router.register(r'', AdditionalEducationViewSet, basename='
 
 experience_router = routers.DefaultRouter()
 experience_router.register(r'', ExperienceViewSet, basename='experience')
+
+user_book_router = routers.DefaultRouter()
+
