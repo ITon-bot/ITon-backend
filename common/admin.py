@@ -1,12 +1,22 @@
 from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
 
-from common.models import Language, LanguageProficiency, Report
+from common.models import Language, LanguageProficiency, Report, Skill, Specialization
 
 
 class LanguageProficiencyInline(GenericTabularInline):
     model = LanguageProficiency
     extra = 1
+
+
+@admin.register(Skill)
+class SkillAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Specialization)
+class SpecializationAdmin(admin.ModelAdmin):
+    pass
 
 
 @admin.register(Language)
