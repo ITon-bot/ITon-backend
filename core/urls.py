@@ -19,7 +19,7 @@ from django.urls import path, include
 
 from common.urls import specialization_router, skill_router, report_router, report_admin_router, schema_view
 from common.views import SetLanguageView
-from users.urls import user_router, education_router, additional_education_router, experience_router
+from users.urls import user_router, education_router, additional_education_router, experience_router, user_book_router
 from vacancies.urls import vacancy_router, vacancy_response_router, vacancy_admin_router
 
 urlpatterns = [
@@ -27,13 +27,13 @@ urlpatterns = [
     path('api/users/', include(user_router.urls)),
     path('api/educations/', include(education_router.urls)),
     path('api/additional-educations/', include(additional_education_router.urls)),
+    path('api/user-books/', include(user_book_router.urls)),
     path('api/experiences/', include(experience_router.urls)),
     path('api/vacancies/', include(vacancy_router.urls)),
     path('api/vacancy-responses/', include(vacancy_response_router.urls)),
     path('api/specializations/', include(specialization_router.urls)),
     path('api/skills/', include(skill_router.urls)),
     path('api/reports/', include(report_router.urls)),
-
     # admin
     path('api/vacancies-admin/', include(vacancy_admin_router.urls)),
     path('api/reports-admin/', include(report_admin_router.urls)),
