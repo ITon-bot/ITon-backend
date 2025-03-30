@@ -1,26 +1,24 @@
-from os import environ
-
+import os
 from celery import Celery
 from celery.schedules import crontab
 
-APP_NAME = 'core'
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 
-# Устанавливаем переменную окружения для настроек Django
-environ.setdefault('DJANGO_SETTINGS_MODULE', APP_NAME + '.settings')
+celery_app = Celery('core')
 
-# Инициализируем Celery с именем проекта
-celery_app = Celery(APP_NAME)
 celery_app.config_from_object('django.conf:settings', namespace='CELERY')
+
 celery_app.autodiscover_tasks()
 
-# Настраиваем периодическую задачу
+
+@celery_app.task(bind=True)
+def debug_task(self):
+    print(f'Request: {self.request!r}')
+
+
 celery_app.conf.beat_schedule = {
-    'flush-views-every-5-minutes': {
+    'flush-views-every-minute': {
         'task': 'vacancies.tasks.flush_views_to_db',
-        'schedule': crontab(minute='*/1'),
-    },
-    'update-views-count-every-minute': {
-        'task': 'vacancies.tasks.update_views_count',
         'schedule': crontab(minute='*/1'),
     },
 }
