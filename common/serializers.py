@@ -15,19 +15,19 @@ class LocationSerializer(serializers.ModelSerializer):
 class SpecializationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Specialization
-        fields = ['name']
+        fields = ['id', 'name']
 
 
 class SkillSerializer(serializers.ModelSerializer):
     class Meta:
         model = Skill
-        fields = ['name']
+        fields = ['id', 'name']
 
 
 class LanguageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Language
-        fields = ['code', 'name']
+        fields = ['id', 'code', 'name']
 
 
 class LanguageProficiencySerializer(serializers.ModelSerializer):
