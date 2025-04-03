@@ -5,7 +5,7 @@ from vacancies.models import Vacancy, VacancyResponse
 
 @admin.register(Vacancy)
 class VacancyAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'creator', 'company_name')
+    list_display = ('id', 'title', 'creator', 'company_name')
     inlines = [LanguageProficiencyInline]
 
 

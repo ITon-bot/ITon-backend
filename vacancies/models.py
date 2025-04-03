@@ -40,11 +40,11 @@ class Vacancy(models.Model):
                           ('middle', _('Middle')),
                           ('senior', _('Senior'))]
 
-    name = models.CharField(max_length=255)
+    title = models.CharField(max_length=255)
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='vacancies')
     company_name = models.CharField(max_length=255, blank=True, null=True)
     company_link = models.URLField(blank=True, null=True)
-    info = models.TextField(blank=True)
+    description = models.TextField(blank=True)
     languages = GenericRelation(LanguageProficiency, related_query_name='vacancy_languages')
     specializations = models.ManyToManyField(Specialization, blank=True)
     parent_vacancy = models.ForeignKey('self', on_delete=models.CASCADE, null=True,

@@ -27,7 +27,7 @@ class VacancyMainSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vacancy
         fields = [
-            'name', 'creator', 'company_name', 'company_link', 'info',
+            'title', 'creator', 'company_name', 'company_link', 'description',
             'languages', 'specializations', 'min_payment', 'max_payment',
             'location', 'degree', 'skills', 'type', 'job_format',
             'currency', 'payment_format', 'experience',
@@ -92,13 +92,12 @@ class VacancyMainSerializer(serializers.ModelSerializer):
 
 
 class VacancyListSerializer(serializers.ModelSerializer):
-    # approval_status_display = serializers.CharField(source='get_approval_status_display')
 
     class Meta:
         model = Vacancy
         fields = [
             'id',
-            'name',
+            'title',
             'company_name',
             'approval_status',
             'response_count',
@@ -155,7 +154,7 @@ class VacancyFeedSerializer(VacancyMainSerializer):
         model = Vacancy
         fields = [
             'id',
-            'name',
+            'title',
             'company_name',
             'type',
             'job_format',
