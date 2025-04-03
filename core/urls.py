@@ -24,19 +24,19 @@ from vacancies.urls import vacancy_router, vacancy_response_router, vacancy_admi
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/users/', include(user_router.urls)),
-    path('api/educations/', include(education_router.urls)),
-    path('api/additional-educations/', include(additional_education_router.urls)),
-    path('api/user-books/', include(user_book_router.urls)),
-    path('api/experiences/', include(experience_router.urls)),
-    path('api/vacancies/', include(vacancy_router.urls)),
-    path('api/vacancy-responses/', include(vacancy_response_router.urls)),
-    path('api/specializations/', include(specialization_router.urls)),
-    path('api/skills/', include(skill_router.urls)),
-    path('api/reports/', include(report_router.urls)),
+    path('api/users/', include(user_router.urls), name='users'),
+    path('api/educations/', include(education_router.urls), name='educations'),
+    path('api/additional-educations/', include(additional_education_router.urls), name='additional-educations'),
+    path('api/user-books/', include(user_book_router.urls), name='user-books'),
+    path('api/experiences/', include(experience_router.urls), name='experiences'),
+    path('api/vacancies/', include(vacancy_router.urls), name='vacancies'),
+    path('api/vacancy-responses/', include(vacancy_response_router.urls), name='vacancy-responses'),
+    path('api/specializations/', include(specialization_router.urls), name='specializations'),
+    path('api/skills/', include(skill_router.urls), name='skills'),
+    path('api/reports/', include(report_router.urls), name='reports'),
     # admin
-    path('api/vacancies-admin/', include(vacancy_admin_router.urls)),
-    path('api/reports-admin/', include(report_admin_router.urls)),
+    path('api/vacancies-admin/', include(vacancy_admin_router.urls), name='vacancies-admin'),
+    path('api/reports-admin/', include(report_admin_router.urls), name='reports-admin'),
 
     # loc
     path('api/set-language/', SetLanguageView.as_view(), name='set-language'),
