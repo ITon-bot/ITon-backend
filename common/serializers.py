@@ -2,15 +2,8 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
-from common.models import Location, Specialization, Skill, Language, LanguageProficiency, Report
+from common.models import Specialization, Skill, Language, LanguageProficiency, Report
 from core.settings import LANGUAGES
-
-
-class LocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
-        fields = ['id', 'name', 'address', 'latitude', 'longitude']
-
 
 class SpecializationSerializer(serializers.ModelSerializer):
     class Meta:
