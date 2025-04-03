@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from common.models import Location, Specialization
+from common.models import Specialization
 from common.serializers import SpecializationSerializer, SkillSerializer, \
     LanguageProficiencySerializer
 from users.models import User, Education, AdditionalEducation, Experience, UserBook
@@ -56,37 +56,6 @@ class EducationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Education
         fields = ['id', 'user', 'name', 'location', 'program', 'degree', 'start_date', 'end_date']
-        read_only_fields = ['id', 'user']
-
-    def create(self, validated_data):
-        """
-        Если в POST-запросе пришли поля location: {...},
-        создаём новую запись в Location. Если не пришли — location=None.
-        """
-        location_data = validated_data.pop('location', None)
-        if location_data:
-            loc = Location.objects.create(**location_data)
-            validated_data['location'] = loc
-        else:
-            validated_data['location'] = None
-
-        return Education.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        """
-        Если нужно обновлять Education+Location PATCH/PUT запросом.
-        """
-        location_data = validated_data.pop('location', None)
-
-        if location_data is not None:
-            if instance.location:
-                for attr, value in location_data.items():
-                    setattr(instance.location, attr, value)
-                instance.location.save()
-            else:
-                instance.location = Location.objects.create(**location_data)
-
-        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         """
@@ -117,7 +86,6 @@ class AdditionalEducationSerializer(serializers.ModelSerializer):
             'id', 'user', 'type', 'name', 'photo',
             'description', 'link', 'start_date', 'end_date'
         ]
-        read_only_fields = ['id', 'user']
 
     def validate(self, data):
         """
@@ -139,7 +107,6 @@ class ExperienceSerializer(serializers.ModelSerializer):
             'id', 'user', 'company_name', 'link', 'position',
             'info', 'start_date', 'end_date'
         ]
-        read_only_fields = ['id', 'user']
 
     def validate(self, data):
         """
