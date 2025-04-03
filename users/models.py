@@ -145,7 +145,8 @@ class Education(models.Model):
     start_date = models.DateField(verbose_name='Дата начала обучения')
     end_date = models.DateField(blank=True, null=True, verbose_name='Дата окончания обучения')
 
-    unique_together = ('user', 'name', 'location', 'degree', 'program')
+    class Meta:
+        unique_together = ('user', 'name', 'location', 'degree', 'program')
 
     def __str__(self):
         return f"{self.name} ({self.degree})"
