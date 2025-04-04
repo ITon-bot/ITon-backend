@@ -64,7 +64,7 @@ class Vacancy(models.Model):
     experience = models.CharField(max_length=100, choices=EXPERIENCE_CHOICES)
 
     def __str__(self):
-        return self.name
+        return self.title
 
     def register_view(self, user):
         """Записываем просмотр в Redis"""
@@ -96,7 +96,7 @@ class VacancyResponse(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username} -> {self.vacancy.name}"
+        return f"{self.user.username} -> {self.vacancy.title}"
 
     class Meta:
         constraints = [
